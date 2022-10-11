@@ -40,7 +40,7 @@ public class TypeMap
         }
     }
     public Features<IRuntimeFeature> Features => Details.Features;
-    private TypeMapDetails Details => _details ??= new();
+    private TypeMapDetails Details => _details ??= new(this);
     public void CheckProjection()
     {
         if (Projection)
@@ -276,6 +276,8 @@ public class TypeMap
     public SourceMemberConfig FindOrCreateSourceMemberConfigFor(MemberInfo sourceMember) => Details.FindOrCreateSourceMemberConfigFor(sourceMember);
     class TypeMapDetails
     {
+        internal TypeMapDetails(TypeMap typeMap) => _typeMap = typeMap;
+        private readonly TypeMap _typeMap;
         Features<IRuntimeFeature> _features;
         public bool PreserveReferences;
         public LambdaExpression[] IncludedMembers;
@@ -299,6 +301,9 @@ public class TypeMap
         {
             if (InheritedTypeMaps != null)
             {
+                // Sort the type maps so we apply the closest map first (in terms of type hierarchy).
+                InheritedTypeMaps = InheritedTypeMaps.OrderBy(m => m, new TypeMapComparer(_typeMap)).ToList();
+
                 foreach (var inheritedTypeMap in InheritedTypeMaps)
                 {
                     var includedMaps = inheritedTypeMap?._details?.IncludedMembersTypeMaps;

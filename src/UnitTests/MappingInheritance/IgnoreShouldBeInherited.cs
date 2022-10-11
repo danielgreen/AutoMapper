@@ -196,3 +196,87 @@ public class IgnoreOverrideShouldBeOverridenIncludeBase : AutoMapperSpecBase
         dest.Text.ShouldBe("");
     }
 }
+
+public class IgnoreOverrideShouldBeInheritedFromClosestParentMapWhenUsingIncludeAllDerivedRegardlessOfOrder : AutoMapperSpecBase
+{
+    interface IFoo { string FooText { get; set; } }
+    class Foo : IFoo { public string FooText { get; set; } }
+    class Bar { public string FooText { get; set; } }
+    class Boo : Bar { }
+
+    protected override MapperConfiguration CreateConfiguration() => new(c =>
+    {
+        c.CreateMap<object, IFoo>().ForMember(d => d.FooText, o => o.Ignore()).IncludeAllDerived();
+        c.CreateMap<Bar, IFoo>().ForMember(d => d.FooText, o => o.MapFrom(s => s.FooText)).IncludeAllDerived();
+        c.CreateMap<Boo, Foo>();
+    });
+    [Fact]
+    public void Should_map()
+    {
+        var dest = Map<Foo>(new Boo { FooText = "hi" });
+        dest.FooText.ShouldBe("hi");
+    }
+}
+
+public class IgnoreOverrideShouldBeInheritedFromClosestParentMapWhenUsingIncludeAllDerivedRegardlessOfOrder_V2 : AutoMapperSpecBase
+{
+    interface IFoo { string FooText { get; set; } }
+    class Foo : IFoo { public string FooText { get; set; } }
+    class Bar { public string FooText { get; set; } }
+    class Boo : Bar { }
+
+    protected override MapperConfiguration CreateConfiguration() => new(c =>
+    {
+        c.CreateMap<Bar, IFoo>().ForMember(d => d.FooText, o => o.MapFrom(s => s.FooText)).IncludeAllDerived();
+        c.CreateMap<object, IFoo>().ForMember(d => d.FooText, o => o.Ignore()).IncludeAllDerived();
+        c.CreateMap<Boo, Foo>();
+    });
+    [Fact]
+    public void Should_map()
+    {
+        var dest = Map<Foo>(new Boo { FooText = "hi" });
+        dest.FooText.ShouldBe("hi");
+    }
+}
+
+public class IgnoreShouldBeInheritedFromClosestParentMapWhenUsingIncludeAllDerivedRegardlessOfOrder : AutoMapperSpecBase
+{
+    interface IFoo { string FooText { get; set; } }
+    class Foo : IFoo { public string FooText { get; set; } }
+    class Bar { public string FooText { get; set; } }
+    class Boo : Bar { }
+
+    protected override MapperConfiguration CreateConfiguration() => new(c =>
+    {
+        c.CreateMap<object, IFoo>().ForMember(d => d.FooText, o => o.MapFrom(s => "foo")).IncludeAllDerived();
+        c.CreateMap<Bar, IFoo>().ForMember(d => d.FooText, o => o.Ignore()).IncludeAllDerived();
+        c.CreateMap<Boo, Foo>();
+    });
+    [Fact]
+    public void Should_map()
+    {
+        var dest = Map<Foo>(new Boo { FooText = "hi" });
+        dest.FooText.ShouldBeNull();
+    }
+}
+
+public class IgnoreShouldBeInheritedFromClosestParentMapWhenUsingIncludeAllDerivedRegardlessOfOrder_V2 : AutoMapperSpecBase
+{
+    interface IFoo { string FooText { get; set; } }
+    class Foo : IFoo { public string FooText { get; set; } }
+    class Bar { public string FooText { get; set; } }
+    class Boo : Bar { }
+
+    protected override MapperConfiguration CreateConfiguration() => new(c =>
+    {
+        c.CreateMap<Bar, IFoo>().ForMember(d => d.FooText, o => o.Ignore()).IncludeAllDerived();
+        c.CreateMap<object, IFoo>().ForMember(d => d.FooText, o => o.MapFrom(s => "foo")).IncludeAllDerived();
+        c.CreateMap<Boo, Foo>();
+    });
+    [Fact]
+    public void Should_map()
+    {
+        var dest = Map<Foo>(new Boo { FooText = "hi" });
+        dest.FooText.ShouldBeNull();
+    }
+}
